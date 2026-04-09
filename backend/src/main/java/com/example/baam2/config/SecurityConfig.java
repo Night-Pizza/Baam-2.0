@@ -29,7 +29,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository()))
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(csrfTokenRepository())
+                .ignoringRequestMatchers("/user/login", "/user/register", "/auth/csrf"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/user/login", "/user/register", "/auth/csrf" ).permitAll()
                         .anyRequest().authenticated()

@@ -5,8 +5,10 @@ import com.example.baam2.dto.request.UserLoginDTO;
 import com.example.baam2.dto.request.UserUpdateDTO;
 import com.example.baam2.dto.response.UserDTO;
 import com.example.baam2.service.UserService;
+import com.example.baam2.service.EmailService;
 
-import org.springframework.boot.security.autoconfigure.SecurityProperties.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,10 +27,15 @@ import jakarta.servlet.http.HttpSession;
 @RequestMapping("/user")
 @CrossOrigin(origins = "http://localhost:5173")
 public class UserController {
-    private final UserService userService;
+    // just for testing
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
-    public UserController(UserService userService) {
+    private final UserService userService;
+    private final EmailService emailService;
+
+    public UserController(UserService userService, EmailService emailService) {
         this.userService = userService;
+        this.emailService = emailService;
     }
 
     @GetMapping("/{id}")
@@ -56,8 +63,16 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<UserDTO> createUser(@RequestBody UserCreateDTO userCreateDTO) {
+        UserDTO response = userService.createUser(userCreateDTO);
+        // just for testing
+        try {
+            emailService.sendWelcomeEmail(response.getEmail(), response.getRole());
+        } catch (Exception ex) {
+            logger.warn("User {} created, but welcome email was not sent: {}", response.getEmail(), ex.getMessage());
+        }
+
         return ResponseEntity.status(201)
-                .body(userService.createUser(userCreateDTO));
+                .body(response);
     }
 
     @GetMapping("/me")
