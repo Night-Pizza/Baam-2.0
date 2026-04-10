@@ -5,6 +5,7 @@ import com.example.baam2.dto.request.UserLoginDTO;
 import com.example.baam2.dto.request.UserUpdateDTO;
 import com.example.baam2.dto.response.UserDTO;
 import com.example.baam2.service.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,13 +40,14 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<UserDTO> createUser(@RequestBody UserCreateDTO userCreateDTO) {
-        return ResponseEntity.status(201)
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(userService.createUser(userCreateDTO));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Long id){
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id){
         userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}")
