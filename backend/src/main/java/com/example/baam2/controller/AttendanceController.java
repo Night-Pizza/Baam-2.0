@@ -11,6 +11,8 @@ import com.example.baam2.repository.SessionRepository;
 import com.example.baam2.repository.UserRepository;
 import com.example.baam2.service.AttendanceService;
 import com.example.baam2.service.SessionService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,23 +28,24 @@ public class AttendanceController {
     }
 
     @PostMapping("/create")
-    public AttendanceResponseDTO createAttendance(@RequestBody AttendanceCreateDTO attendanceCreateDTO) {
-        return attendanceService.createAttendance(attendanceCreateDTO);
+    public ResponseEntity<AttendanceResponseDTO> createAttendance(@RequestBody AttendanceCreateDTO attendanceCreateDTO) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(attendanceService.createAttendance(attendanceCreateDTO));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteAttendance(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteAttendance(@PathVariable Long id) {
         attendanceService.deleteAttendance(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
-    private List<UserAttendanceDTO> getAllUserAttendance(@PathVariable Long id){
-        return attendanceService.getAllUserAttendance(id);
+    public ResponseEntity<List<UserAttendanceDTO>> getAllUserAttendance(@PathVariable Long id){
+        return ResponseEntity.ok().body(attendanceService.getAllUserAttendance(id));
     }
 
     @GetMapping("/all")
-    public List<AttendanceResponseDTO> getAllAttendance(){
-        return attendanceService.getAllAttendance();
+    public ResponseEntity<List<AttendanceResponseDTO>> getAllAttendance(){
+        return ResponseEntity.ok().body(attendanceService.getAllAttendance());
     }
 
 }
