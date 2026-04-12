@@ -1,5 +1,4 @@
-/*
-import { type FormEvent, useState } from 'react';
+/*import { type FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginUser } from '../api/Authentification';
 
@@ -77,7 +76,6 @@ export default function LoginPage() {
 }
 
 */
-
 import { type FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
