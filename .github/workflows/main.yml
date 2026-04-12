@@ -9,6 +9,10 @@ on:
             - main
     workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
     backend-build:
         runs-on: ubuntu-latest
