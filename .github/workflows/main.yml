@@ -60,7 +60,7 @@ jobs:
         steps:
             - name: Deploy to Server
               run: |
-                sudo cd /root/baam2.0
-                sudo docker compose pull
-                sudo docker compose up -d
+                cd /home/runner/baam2.0
+                docker compose pull
+                docker compose up -d
                   
