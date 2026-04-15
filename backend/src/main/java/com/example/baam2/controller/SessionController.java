@@ -1,6 +1,7 @@
 package com.example.baam2.controller;
 
 import com.example.baam2.dto.request.SessionCreateDTO;
+import com.example.baam2.dto.request.SessionGpsCreateDTO;
 import com.example.baam2.dto.request.SessionUpdateDTO;
 import com.example.baam2.dto.response.SessionResponseDTO;
 import com.example.baam2.model.UserModel;
@@ -29,6 +30,11 @@ public class SessionController {
     @PostMapping("/create")
     public ResponseEntity<SessionResponseDTO> createSession(@Valid @RequestBody SessionCreateDTO sessionCreateDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(sessionService.createSession(sessionCreateDTO));
+    }
+
+    @PostMapping("/create/geo")
+    public ResponseEntity<SessionResponseDTO> createGeoSession(@Valid @RequestBody SessionGpsCreateDTO sessionGpsCreateDTO) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(sessionService.createGpsSession(sessionGpsCreateDTO));
     }
 
     @DeleteMapping("/{id}")

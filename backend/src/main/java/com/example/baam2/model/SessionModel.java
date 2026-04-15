@@ -23,6 +23,10 @@ public class SessionModel {
     private UserModel owner;
     private boolean isActive;
     private LocalDateTime createAt;
+
+    private Double latitude;
+    private Double longitude;
+    private Double allowedRadius;
 }
 
 

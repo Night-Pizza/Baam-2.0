@@ -1,7 +1,7 @@
 package com.example.baam2.service;
 
-import com.example.baam2.controller.SessionController;
 import com.example.baam2.dto.request.SessionCreateDTO;
+import com.example.baam2.dto.request.SessionGpsCreateDTO;
 import com.example.baam2.dto.request.SessionUpdateDTO;
 import com.example.baam2.repository.AttendanceRepository;
 import com.example.baam2.repository.UserRepository;
@@ -11,7 +11,6 @@ import com.example.baam2.dto.response.SessionResponseDTO;
 import com.example.baam2.exception.CustomException;
 import com.example.baam2.model.SessionModel;
 import com.example.baam2.repository.SessionRepository;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,15 +27,31 @@ public class SessionService {
         this.attendanceRepository = attendanceRepository;
     }
 
-    public SessionResponseDTO createSession(SessionCreateDTO request){
+
+    public SessionModel initializeSessionModel(String title, Long ownerId){
         SessionModel sessionModel = new SessionModel();
 
-        sessionModel.setTitle(request.title());
-        sessionModel.setOwner(userRepository.findById(request.ownerId()).orElseThrow(() ->
+        sessionModel.setTitle(title);
+        sessionModel.setOwner(userRepository.findById(ownerId).orElseThrow(() ->
                 new CustomException("OWNER_ID_NOT_EXIST","Session owner id does not exist")));
 
         sessionModel.setActive(true);
         sessionModel.setCreateAt(LocalDateTime.now());
+
+        return sessionModel;
+    }
+
+    public SessionResponseDTO createSession(SessionCreateDTO request){
+        SessionModel sessionModel = initializeSessionModel(request.title(), request.ownerId());
+        return mapToDTO(sessionRepository.save(sessionModel));
+    }
+
+    public SessionResponseDTO createGpsSession(SessionGpsCreateDTO request){
+        SessionModel sessionModel = initializeSessionModel(request.title(), request.ownerId());
+
+        sessionModel.setLatitude(request.latitude());
+        sessionModel.setLongitude(request.longitude());
+        sessionModel.setAllowedRadius(request.allowedRadius());
 
         return mapToDTO(sessionRepository.save(sessionModel));
     }
