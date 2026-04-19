@@ -1,11 +1,9 @@
 package com.example.baam2.dto.request;
-import lombok.Data;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class SessionUpdateDTO {
-    private String title;
-}
+
+import jakarta.validation.constraints.NotBlank;
+
+public record SessionUpdateDTO (
+        @NotBlank(message = "Session title cannot be null or empty")
+        String title
+){}

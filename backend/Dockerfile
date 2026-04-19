@@ -1,5 +1,20 @@
-FROM python:3.9-slim
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS builder
 WORKDIR /app
-RUN echo "<h1>You see this because the backend developers didn't write a Dockerfile!</h1>" > index.html
-CMD ["python", "-m", "http.server", "8080"]
+
+COPY pom.xml .
+RUN mvn dependency:go-offline
+
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+RUN addgroup -S baamgroup && adduser -S baamuser -G baamgroup
+USER baamuser:baamgroup
+
+COPY --from=builder /app/target/*.jar app.jar
+
 EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

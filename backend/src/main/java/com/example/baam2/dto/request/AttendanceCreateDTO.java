@@ -1,12 +1,11 @@
 package com.example.baam2.dto.request;
-import lombok.Data;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class AttendanceCreateDTO {
-    private Long sessionId;
-    private Long userId;
-}
+import jakarta.validation.constraints.NotNull;
+
+public record AttendanceCreateDTO (
+        @NotNull(message ="Session id cannot be null")
+        Long sessionId,
+
+        @NotNull(message ="User id cannot be null")
+        Long userId
+){}

@@ -1,9 +1,11 @@
 package com.example.baam2.service;
 
 import com.example.baam2.dto.request.AttendanceCreateDTO;
+import com.example.baam2.dto.request.AttendanceGpsCreateDTO;
 import com.example.baam2.dto.response.AttendanceResponseDTO;
 import com.example.baam2.dto.response.UserAttendanceDTO;
 import com.example.baam2.model.AttendanceModel;
+import com.example.baam2.model.SessionModel;
 import com.example.baam2.repository.AttendanceRepository;
 import com.example.baam2.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -26,31 +28,38 @@ public class AttendanceService {
         this.attendanceRepository = attendanceRepository;
     }
 
+
+
     public AttendanceResponseDTO createAttendance(AttendanceCreateDTO request){
-        if (request.getUserId() == null)
-            throw new CustomException("USER_ID_IS_NULL","User id cannot be null");
-        if (request.getSessionId() == null)
-            throw new CustomException("SESSION_ID_IS_NULL","Session id cannot be null");
-        if (!(userRepository.existsById(request.getUserId())))
-            throw new CustomException("USER_ID_NOT_EXIST","User id does not exist");
-        if (!(sessionRepository.existsById(request.getSessionId())))
-            throw new CustomException("SESSION_ID_NOT_EXIST","SESSION id does not exist");
-        if (attendanceRepository.existsByUserIdAndSessionId(request.getUserId(), request.getSessionId()))
+        if (attendanceRepository.existsByUserIdAndSessionId(request.userId(), request.sessionId()))
             throw new CustomException("USER_ALREADY_ATTENDED_SESSION", "User with this this id has already attended session with this id");
 
         AttendanceModel attendanceModel = new AttendanceModel();
 
-        attendanceModel.setUser(userRepository.findById(request.getUserId()).orElseThrow());
-        attendanceModel.setSession(sessionRepository.findById(request.getSessionId()).orElseThrow());
+        attendanceModel.setUser(userRepository.findById(request.userId()).orElseThrow( () -> new CustomException("USER_ID_NOT_EXIST","User id does not exist")));
+        SessionModel session = sessionRepository.findById(request.sessionId()).orElseThrow(() -> new CustomException("SESSION_ID_NOT_EXIST","SESSION id does not exist"));
+        attendanceModel.setSession(session);
+        if (!(attendanceModel.getSession().isActive())) throw new CustomException("SESSION_IS_CLOSED", "Session is already closed");
         attendanceModel.setTimestamp(LocalDateTime.now());
-        attendanceModel = attendanceRepository.save(attendanceModel);
-
-        AttendanceResponseDTO response = new AttendanceResponseDTO();
-
-        response.setId(attendanceModel.getId());
-        response.setTimestamp(attendanceModel.getTimestamp());
-        return response;
+        return mapToDTO(attendanceRepository.save(attendanceModel));
     }
+
+    public AttendanceResponseDTO createGpsAttendance(AttendanceGpsCreateDTO request){
+        SessionModel session = sessionRepository.findById(request.sessionId()).orElseThrow(()
+                -> new CustomException("SESSION_ID_NOT_EXISTS", "Session with this id does not exist"));
+        boolean inClass = isInClass(session.getLatitude(), session.getLongitude(), session.getAllowedRadius(),
+                request.latitude(), request.longitude());
+        if (!inClass)
+            throw new CustomException("OUT_OF_ATTENDANCE_RADIUS", "User is out of attendance radius");
+
+        AttendanceCreateDTO basicCreationDTO = new AttendanceCreateDTO(
+                request.sessionId(),
+                request.userId()
+        );
+
+        return createAttendance(basicCreationDTO);
+    }
+
 
     public void deleteAttendance(Long id){
         if (!(attendanceRepository.existsById(id)))
@@ -60,17 +69,40 @@ public class AttendanceService {
 
     public List<UserAttendanceDTO> getAllUserAttendance(Long id){
         return attendanceRepository.findAllByUserId(id).stream().map(attendanceModel -> new UserAttendanceDTO(
-                attendanceModel.getId(),
-                attendanceModel.getSession().getTitle(),
-                attendanceModel.getSession().getOwner().getEmail(),
-                attendanceModel.getTimestamp()))
+                        attendanceModel.getId(),
+                        attendanceModel.getSession().getTitle(),
+                        attendanceModel.getSession().getOwner().getEmail(),
+                        attendanceModel.getTimestamp()))
                 .collect(Collectors.toList());
     }
 
     public List<AttendanceResponseDTO> getAllAttendance(){
         return attendanceRepository.findAll().stream().map(attendanceModel -> new AttendanceResponseDTO(
-                attendanceModel.getId(),
-                attendanceModel.getTimestamp()))
+                        attendanceModel.getId(),
+                        attendanceModel.getTimestamp()))
                 .collect(Collectors.toList());
     }
+
+    private AttendanceResponseDTO mapToDTO(AttendanceModel attendanceModel) {
+        return new AttendanceResponseDTO(
+                attendanceModel.getId(),
+                attendanceModel.getTimestamp()
+        );
+    }
+
+    private boolean isInClass(Double originalLat, Double originalLong, Double allowedRadius, Double studentLat, Double studentLong) {
+        final int EARTH_RADIUS_METERS = 6371000;
+
+        double dLat = Math.toRadians(originalLat - studentLat);
+        double dLon = Math.toRadians(originalLong - studentLong);
+
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(studentLat)) * Math.cos(Math.toRadians(originalLat)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double distance = EARTH_RADIUS_METERS * c;
+
+        return distance <= allowedRadius;
+    }
+
 }

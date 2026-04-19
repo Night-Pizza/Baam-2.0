@@ -1,3 +1,21 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
 FROM nginx:alpine
-RUN echo "<h1>You see this because the frontend developers didn't write a Dockerfile!</h1>" > /usr/share/nginx/html/index.html
+
+WORKDIR /usr/share/nginx/html
+RUN rm -rf ./*
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+COPY --from=builder /app/dist .
+
 EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
